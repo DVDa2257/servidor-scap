@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Acesso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            font-size: 1em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .log-entry {
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .log-time {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .log-message {
+            font-weight: 500;
+        }
+
+        .api-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .api-endpoint {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters input,
+        .filters select {
+            flex: 1;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏭 Sistema de Controle de Acesso</h1>
+            <p class="subtitle">Gerenciamento de Máquinas e Usuários</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="showTab('usuarios')">👥 Usuários</button>
+            <button class="tab" onclick="showTab('maquinas')">⚙️ Máquinas</button>
+            <button class="tab" onclick="showTab('logs')">📝 Logs</button>
+            <button class="tab" onclick="showTab('api')">🔌 API</button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="content active">
+            <h2 style="margin-bottom: 20px;">Visão Geral</h2>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Máquinas Ativas</h3>
+                    <div class="value" id="maquinasAtivas">3</div>
+                </div>
+                <div class="card">
+                    <h3>Usuários Cadastrados</h3>
+                    <div class="value" id="totalUsuarios">12</div>
+                </div>
+                <div class="card">
+                    <h3>Sessões Hoje</h3>
+                    <div class="value" id="sessoesHoje">28</div>
+                </div>
+                <div class="card">
+                    <h3>Alertas Pendentes</h3>
+                    <div class="value" id="alertas">0</div>
+                </div>
+            </div>
+
+            <h3>Máquinas em Uso Agora</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Máquina</th>
+                        <th>Usuário</th>
+                        <th>Início</th>
+                        <th>RSSI</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="maquinasEmUso">
+                    <tr>
+                        <td>TORNO-01</td>
+                        <td>João Silva</td>
+                        <td>14:32</td>
+                        <td>-65 dBm</td>
+                        <td><span class="status active">Normal</span></td>
+                    </tr>
+                    <tr>
+                        <td>FURADEIRA-03</td>
+                        <td>Maria Santos</td>
+                        <td>14:45</td>
+                        <td>-72 dBm</td>
+                        <td><span class="status warning">Distante</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 30px;">Últimos Eventos</h3>
+            <div id="ultimosEventos">
+                <div class="log-entry">
+                    <div class="log-time">15:23:45 - 07/11/2025</div>
+                    <div class="log-message">✅ Maria Santos acessou FURADEIRA-03</div>
+                </div>
+                <div class="log-entry">
+                    <div class="log-time">15:20:12 - 07/11/2025</div>
+                    <div class="log-message">⏹️ João Silva finalizou uso do TORNO-01 (Duração: 45min)</div>
+                </div>
+                <div class="log-entry">
+                    <div class="log-time">15:18:33 - 07/11/2025</div>
+                    <div class="log-message">🚨 ALERTA: Pedro Costa se afastou criticamente da SERRA-02</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USUÁRIOS -->
+        <div id="usuarios" class="content">
+            <h2 style="margin-bottom: 20px;">Gerenciamento de Usuários</h2>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px;">Adicionar Novo Usuário</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="nomeUsuario" placeholder="Ex: João Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>UID do Cartão RFID</label>
+                        <input type="text" id="uidCartao" placeholder="Ex: F1B2715B">
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo/Função</label>
+                        <input type="text" id="cargoUsuario" placeholder="Ex: Operador">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="statusUsuario">
+                            <option value="ativo">Ativo</option>
+                            <option value="inativo">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="adicionarUsuario()">Adicionar Usuário</button>
+            </div>
+
+            <h3>Usuários Cadastrados</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>UID Cartão</th>
+                        <th>Cargo</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaUsuarios">
+                    <tr>
+                        <td>João Silva</td>
+                        <td>F1B2715B</td>
+                        <td>Operador Senior</td>
+                        <td><span class="status active">Ativo</span></td>
+                        <td class="actions">
+                            <button class="btn-small btn-success">Editar</button>
+                            <button class="btn-small btn-danger">Desativar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Maria Santos</td>
+                        <td>04A1B2C3</td>
+                        <td>Técnica</td>
+                        <td><span class="status active">Ativo</span></td>
+                        <td class="actions">
+                            <button class="btn-small btn-success">Editar</button>
+                            <button class="btn-small btn-danger">Desativar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Pedro Costa</td>
+                        <td>04D4E5F6</td>
+                        <td>Auxiliar</td>
+                        <td><span class="status inactive">Inativo</span></td>
+                        <td class="actions">
+                            <button class="btn-small btn-success">Editar</button>
+                            <button class="btn-small btn-success">Ativar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- MÁQUINAS -->
+        <div id="maquinas" class="content">
+            <h2 style="margin-bottom: 20px;">Gerenciamento de Máquinas</h2>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px;">Cadastrar Nova Máquina</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label>Nome/ID da Máquina</label>
+                        <input type="text" id="nomeMaquina" placeholder="Ex: TORNO-01">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="tipoMaquina">
+                            <option>Torno</option>
+                            <option>Furadeira</option>
+                            <option>Fresadora</option>
+                            <option>Serra</option>
+                            <option>Prensa</option>
+                            <option>Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Setor</label>
+                        <input type="text" id="setorMaquina" placeholder="Ex: Usinagem">
+                    </div>
+                    <div class="form-group">
+                        <label>Nível de Risco</label>
+                        <select id="riscoMaquina">
+                            <option>Baixo</option>
+                            <option>Médio</option>
+                            <option>Alto</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="adicionarMaquina()">Cadastrar Máquina</button>
+            </div>
+
+            <h3>Máquinas Cadastradas</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Setor</th>
+                        <th>Risco</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaMaquinas">
+                    <tr>
+                        <td>TORNO-01</td>
+                        <td>Torno</td>
+                        <td>Usinagem A</td>
+                        <td><span class="status warning">Alto</span></td>
+                        <td><span class="status active">Online</span></td>
+                        <td class="actions">
+                            <button class="btn-small btn-success">Configurar</button>
+                            <button class="btn-small">Histórico</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>FURADEIRA-03</td>
+                        <td>Furadeira</td>
+                        <td>Usinagem B</td>
+                        <td><span class="status active">Médio</span></td>
+                        <td><span class="status active">Online</span></td>
+                        <td class="actions">
+                            <button class="btn-small btn-success">Configurar</button>
+                            <button class="btn-small">Histórico</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>SERRA-02</td>
+                        <td>Serra Circular</td>
+                        <td>Corte</td>
+                        <td><span class="status warning">Alto</span></td>
+                        <td><span class="status inactive">Offline</span></td>
+                        <td class="actions">
+                            <button class="btn-small btn-success">Configurar</button>
+                            <button class="btn-small">Histórico</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LOGS -->
+        <div id="logs" class="content">
+            <h2 style="margin-bottom: 20px;">Logs de Acesso e Eventos</h2>
+
+            <div class="filters">
+                <input type="date" id="filtroData">
+                <select id="filtroMaquina">
+                    <option value="">Todas as Máquinas</option>
+                    <option>TORNO-01</option>
+                    <option>FURADEIRA-03</option>
+                    <option>SERRA-02</option>
+                </select>
+                <select id="filtroUsuario">
+                    <option value="">Todos os Usuários</option>
+                    <option>João Silva</option>
+                    <option>Maria Santos</option>
+                    <option>Pedro Costa</option>
+                </select>
+                <button onclick="filtrarLogs()">Filtrar</button>
+                <button onclick="exportarLogs()">Exportar CSV</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Usuário</th>
+                        <th>Máquina</th>
+                        <th>Evento</th>
+                        <th>RSSI</th>
+                        <th>Duração</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaLogs">
+                    <tr>
+                        <td>07/11/2025 15:23:45</td>
+                        <td>Maria Santos</td>
+                        <td>FURADEIRA-03</td>
+                        <td><span class="status active">Acesso Autorizado</span></td>
+                        <td>-68 dBm</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>07/11/2025 15:20:12</td>
+                        <td>João Silva</td>
+                        <td>TORNO-01</td>
+                        <td><span class="status inactive">Máquina Parada</span></td>
+                        <td>-55 dBm</td>
+                        <td>45min</td>
+                    </tr>
+                    <tr>
+                        <td>07/11/2025 15:18:33</td>
+                        <td>Pedro Costa</td>
+                        <td>SERRA-02</td>
+                        <td><span class="status warning">Distância Crítica</span></td>
+                        <td>-92 dBm</td>
+                        <td>12min</td>
+                    </tr>
+                    <tr>
+                        <td>07/11/2025 14:55:20</td>
+                        <td>João Silva</td>
+                        <td>TORNO-01</td>
+                        <td><span class="status active">Acesso Autorizado</span></td>
+                        <td>-62 dBm</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>07/11/2025 14:30:15</td>
+                        <td>Carlos Mendes</td>
+                        <td>FURADEIRA-03</td>
+                        <td><span class="status inactive">Acesso Negado</span></td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- API -->
+        <div id="api" class="content">
+            <h2 style="margin-bottom: 20px;">Documentação da API</h2>
+
+            <div class="api-section">
+                <h3>🔐 Autenticação</h3>
+                <p>Todas as requisições devem incluir o header:</p>
+                <div class="api-endpoint">
+                    Authorization: Bearer SEU_TOKEN_AQUI
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>✅ Validar Acesso (RFID)</h3>
+                <p><strong>POST</strong> /api/validar</p>
+                <div class="api-endpoint">
+{
+  "uid": "F1B2715B",
+  "machine_id": "TORNO-01"
+}
+                </div>
+                <p><strong>Resposta:</strong></p>
+                <div class="api-endpoint">
+{
+  "autorizado": true,
+  "usuario": {
+    "nome": "João Silva",
+    "cargo": "Operador"
+  }
+}
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>📝 Enviar Log</h3>
+                <p><strong>POST</strong> /api/log</p>
+                <div class="api-endpoint">
+{
+  "timestamp": 1699380000,
+  "uid": "F1B2715B",
+  "machine_id": "TORNO-01",
+  "event": "MAQUINA_LIGADA",
+  "rssi": -65
+}
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>📊 Obter Status</h3>
+                <p><strong>GET</strong> /api/status</p>
+                <p><strong>Resposta:</strong></p>
+                <div class="api-endpoint">
+{
+  "maquinas_ativas": 3,
+  "usuarios_online": 2,
+  "alertas": 0
+}
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>🔧 Testar Conexão</h3>
+                <button onclick="testarAPI()">Testar API</button>
+                <div id="resultadoAPI" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados simulados em memória
+        let usuarios = [
+            {nome: "João Silva", uid: "F1B2715B", cargo: "Operador Senior", ativo: true},
+            {nome: "Maria Santos", uid: "04A1B2C3", cargo: "Técnica", ativo: true},
+            {nome: "Pedro Costa", uid: "04D4E5F6", cargo: "Auxiliar", ativo: false}
+        ];
+
+        let maquinas = [
+            {id: "TORNO-01", tipo: "Torno", setor: "Usinagem A", risco: "Alto", online: true},
+            {id: "FURADEIRA-03", tipo: "Furadeira", setor: "Usinagem B", risco: "Médio", online: true},
+            {id: "SERRA-02", tipo: "Serra Circular", setor: "Corte", risco: "Alto", online: false}
+        ];
+
+        let logs = [];
+
+        // Navegação entre tabs
+        function showTab(tabName) {
+            // Esconder todos os conteúdos
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remover active de todas as tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar conteúdo selecionado
+            document.getElementById(tabName).classList.add('active');
+            
+            // Ativar tab clicada
+            event.target.classList.add('active');
+        }
+
+        // Adicionar usuário
+        function adicionarUsuario() {
+            const nome = document.getElementById('nomeUsuario').value;
+            const uid = document.getElementById('uidCartao').value;
+            const cargo = document.getElementById('cargoUsuario').value;
+            const status = document.getElementById('statusUsuario').value;
+
+            if (!nome || !uid) {
+                alert('Por favor, preencha nome e UID do cartão!');
+                return;
+            }
+
+            usuarios.push({
+                nome: nome,
+                uid: uid.toUpperCase(),
+                cargo: cargo,
+                ativo: status === 'ativo'
+            });
+
+            // Limpar formulário
+            document.getElementById('nomeUsuario').value = '';
+            document.getElementById('uidCartao').value = '';
+            document.getElementById('cargoUsuario').value = '';
+
+            atualizarListaUsuarios();
+            alert('Usuário adicionado com sucesso!');
+        }
+
+        // Atualizar lista de usuários
+        function atualizarListaUsuarios() {
+            const tbody = document.getElementById('listaUsuarios');
+            tbody.innerHTML = '';
+
+            usuarios.forEach((usuario, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${usuario.nome}</td>
+                    <td>${usuario.uid}</td>
+                    <td>${usuario.cargo}</td>
+                    <td><span class="status ${usuario.ativo ? 'active' : 'inactive'}">
+                        ${usuario.ativo ? 'Ativo' : 'Inativo'}
+                    </span></td>
+                    <td class="actions">
+                        <button class="btn-small btn-success" onclick="editarUsuario(${index})">Editar</button>
+                        <button class="btn-small ${usuario.ativo ? 'btn-danger' : 'btn-success'}" 
+                                onclick="toggleUsuario(${index})">
+                            ${usuario.ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalUsuarios').textContent = usuarios.length;
+        }
+
+        // Toggle status do usuário
+        function toggleUsuario(index) {
+            usuarios[index].ativo = !usuarios[index].ativo;
+            atualizarListaUsuarios();
+        }
+
+        // Adicionar máquina
+        function adicionarMaquina() {
+            const nome = document.getElementById('nomeMaquina').value;
+            const tipo = document.getElementById('tipoMaquina').value;
+            const setor = document.getElementById('setorMaquina').value;
+            const risco = document.getElementById('riscoMaquina').value;
+
+            if (!nome) {
+                alert('Por favor, preencha o nome da máquina!');
+                return;
+            }
+
+            maquinas.push({
+                id: nome.toUpperCase(),
+                tipo: tipo,
+                setor: setor,
+                risco: risco,
+                online: false
+            });
+
+            document.getElementById('nomeMaquina').value = '';
+            atualizarListaMaquinas();
+            alert('Máquina cadastrada com sucesso!');
+        }
+
+        // Atualizar lista de máquinas
+        function atualizarListaMaquinas() {
+            const tbody = document.getElementById('listaMaquinas');
+            tbody.innerHTML = '';
+
+            maquinas.forEach((maquina, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${maquina.id}</td>
+                    <td>${maquina.tipo}</td>
+                    <td>${maquina.setor}</td>
+                    <td><span class="status ${maquina.risco === 'Alto
